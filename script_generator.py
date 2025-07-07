@@ -1,47 +1,40 @@
 import google.generativeai as genai
-
-# Replace with your actual Gemini API key
+import datetime
+from docx import Document
 genai.configure(api_key="AIzaSyDcc1s1OF-U7Dr6n4s5MVzHJbzyzfZxVrY")
-
-# Select model (latest available that supports content generation)
-model = genai.GenerativeModel('models/gemini-1.5-flash')
-
-# Prompt user for script type
-print("Select script type:")
-print("1. YouTube Video (up to 10 mins)")
-print("2. Shorts/Reels (under 60 seconds)")
-choice = input("Enter 1 or 2: ")
-
-# Ask for topic and tone/style
-topic = input("Enter the topic: ")
-style = input("Enter the tone or style (e.g., friendly, funny, informative): ")
-
-if choice == '1':
-    audience = input("Enter your target audience (e.g., common audience, professionals): ")
+model = genai.GenerativeModel("gemini-1.5-flash")
+video_type = input("Choose the type of content (YouTube video / Instagram reel / YouTube Shorts): ").strip().lower()
+topic = input("Enter your video topic: ")
+if "short" in video_type or "reel" in video_type:
     prompt = f"""
-    You are a professional content writer for YouTube creators. Write a detailed, original script for a YouTube video 
-    that is up to 10 minutes long. Include an attention-grabbing hook, valuable information, and a natural ending. 
-    Keep the script engaging and narration-friendly.
-
-    Topic: {topic}
-    Audience: {audience}
-    Style: {style}
-    """
-elif choice == '2':
-    prompt = f"""
-    Create a short, punchy script suitable for Instagram Reels or YouTube Shorts. Keep it under 60 seconds of spoken content.
-    Start with a hook, deliver one strong message or tip, and end with a call-to-action or punchline.
-
-    Topic: {topic}
-    Tone: {style}
+    Generate an engaging script for a 1-minute {video_type} about "{topic}".
+    The script should have an attention-grabbing hook in the first few seconds,
+    use casual and high-energy tone, include visual/action suggestions,
+    and end with a strong call to action.
     """
 else:
-    print("Invalid selection. Please choose 1 or 2.")
-    exit()
-
-# Generate content
+    prompt = f"""
+    Generate a detailed script for a YouTube video about "{topic}".
+    The script should last about 10 minutes and include:
+    - Hook in the intro
+    - Structured explanation in sections
+    - Engaging storytelling tone
+    - Visual suggestions for each section
+    - Call to action at the end
+    Format the response as a script with timestamps.
+    """
 response = model.generate_content(prompt)
+script_text = response.text.strip()
+print("\n--- Generated Script ---\n")
+print(script_text)
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+txt_path = f"youtube_script_{timestamp}.txt"
+with open(txt_path, "w", encoding="utf-8") as f:
+    f.write(script_text)
+doc = Document()
+doc.add_heading("Generated Script", 0)
+doc.add_paragraph(script_text)
+docx_path = f"youtube_script_{timestamp}.docx"
+doc.save(docx_path)
 
-# Output result
-print("\nGenerated Script:\n")
-print(response.text)
+print(f"\n✅ Script exported as:\n📄 {txt_path}\n📄 {docx_path}")
